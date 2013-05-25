@@ -1,0 +1,14 @@
+#Goals
+
+Jacob Weiss
+
+
+* Get everything multi-user functionality fully tested and working 
+* Drawing/physicsing circles
+* We need to figure out the way that the game will be played. We should stay away from the "move the ball to the goal" mechanic. This will be overdone.
+* Art Style
+* Crayon Drawing
+* Level Design
+* Other types of physics such as constraints and springs and such
+* 
+

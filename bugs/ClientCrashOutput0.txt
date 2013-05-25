@@ -1,0 +1,30 @@
+Program received signal EXC_BAD_ACCESS, Could not access memory.
+Reason: 13 at address: 0x0000000000000000
+0x0000000100004348 in stroke_get_length (stroke=0x104a568d0) at Stroke.c:223
+223		return s->points->len;
+(gdb) bt
+#0  0x0000000100004348 in stroke_get_length (stroke=0x104a568d0) at Stroke.c:223
+#1  0x00000001000024ba in draw_stroke (s=0x104a568d0, context=0x7fff5fbff050) at Graphics.c:87
+#2  0x0000000100a5a8ad in g_list_foreach ()
+#3  0x00000001000023ab in graphics_draw (drawing_area=0x10185a820, cr=0x101867c00, strokes=0x108607d00, color={pixel = 0, red = 171, green = 73, blue = 148}) at Graphics.c:64
+#4  0x0000000100002b7b in draw (widget=0x10185a820, cr=0x101867c00, view=0x10112b790) at GameView.c:112
+#5  0x0000000100134771 in _gtk_marshal_BOOLEAN__BOXEDv ()
+#6  0x000000010026e0fb in gtk_widget_draw_marshallerv ()
+#7  0x00000001009e1a35 in _g_closure_invoke_va ()
+#8  0x00000001009f20d8 in g_signal_emit_valist ()
+#9  0x00000001009f2d24 in g_signal_emit ()
+#10 0x0000000100260785 in _gtk_widget_draw_internal ()
+#11 0x00000001002614c0 in gtk_widget_send_expose ()
+#12 0x000000010013346c in gtk_main_do_event ()
+#13 0x0000000100549595 in _gdk_window_process_updates_recurse ()
+#14 0x0000000100549632 in _gdk_window_process_updates_recurse ()
+#15 0x0000000100549d90 in gdk_window_process_updates_internal ()
+#16 0x00000001005497dd in gdk_window_process_all_updates ()
+#17 0x0000000100549f59 in gdk_window_update_idle ()
+#18 0x0000000100536472 in gdk_threads_dispatch ()
+#19 0x0000000100a5c8f8 in g_main_context_dispatch ()
+#20 0x0000000100a5ea0e in g_main_context_iterate ()
+#21 0x0000000100a5ffaf in g_main_loop_run ()
+#22 0x0000000100132e3a in gtk_main ()
+#23 0x0000000100002f51 in main_window_begin (main_window=0x10112e930) at MainWindow.c:77
+#24 0x0000000100000b6d in main (argc=1, argv=0x7fff5fbffac0) at ClientMain.c:12

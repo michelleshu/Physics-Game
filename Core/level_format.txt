@@ -1,0 +1,9 @@
+** LEVEL FILE FORMAT **
+
+LEVEL level_id num_boxes num_polygons num_stars
+WORLD world_width world_height
+BOX mass x y width height r g b
+POLY mass c_x c_y num_vertices v1_x v1_y v2_x v2_y ... vn_x vn_y r g b
+STAR mass x y radius r g b
+BALL mass x y radius r g b
+GOAL x1 y1 x2 y2

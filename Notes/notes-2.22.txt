@@ -1,0 +1,50 @@
+
+
+beej's guide -- more inspirational instead of what we really need
+
+so undo what we have. 
+
+step-- get chat client working.
+
+factor then wrap it to hide away the syntax so things look nice.
+
+then rewrite chat function.
+this should be an ECHO CLIENT
+
+
+then MULTICHAT
+	so many people have this option.
+
+
+then, single player physics.
+first just revieve pysics.
+then add sending physics calls
+
+
+NEXT progress to multiple person physics
+	array of file descriptors.
+	
+	server data structure saying who is who.
+		hash table (from gtk) to connect file descriptors and usernames
+
+select stuff should be HIDDEN AWAY
+
+USE TELNET AS THE CLIENT FOR NOW
+	alternative: send a file
+		write a simple server which connects and sends a file across.
+			could use stdin (pipe to std in.)
+
+
+PROTOCOL 
+	balcom says YOU MUST USE ASCII
+	ints gets shui COMPLICATED
+	ascii is printable to files and stuff like that
+	this means parsing but i guess thats ok...
+
+
+IN WORLD PHYSICS LOAD STAR:
+	pound define an array of doubles to represent star angles.
+
+
+
+

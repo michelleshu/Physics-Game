@@ -1,0 +1,82 @@
+#Testing of Core Subsystem
+
+Michelle Shu
+
+## The Test File
+The test file for the core subsystem is level_test.c
+
+## Verifying Loading of .lvl Files
+The primary function of level.c is to load in the information from .lvl files. This is tested buy reading in an example level file (actually the first level we use for our game), level.lvl. We have level.c load in the .lvl file and use it to construct a level structure, which we then go through, printing to the console what is stored at each location in the struct.
+
+The original level file is:
+LEVEL 1 2 1
+WORLD 15 15
+BOX  10  1  14.5 1  1  1  0  0
+BOX  9   4  14   1  2  0  0  1
+STAR 8   6  14   1     1  1  0
+
+After using the level_new function to instantiate a new level, we have a level with the following properties:
+
+Level loaded.
+Level Number: 1
+Level has 2 boxes and 1 stars.
+The world has dimensions (15.000000, 15.000000)
+Box Number 0:
+	Position: (1.000000, 14.500000)
+	Size: (1.000000, 1.000000)
+	Mass: 10.000000
+	Color: (1.000000, 0.000000, 0.000000)
+Box Number 1:
+	Position: (6.000000, 14.000000)
+	Size: (1.000000, 1.000000)
+	Mass: 8.000000
+	Color: (0.000000, 1.000000, 0.000000)
+Star Number 0:
+	Position: (6.000000, 14.000000)
+	Radius: 1.000000
+	Mass: 8.000000
+	Color: (1.000000, 0.000000, 1.000000)
+
+The properties of Box Number 1 don't seem quite right here. However, the box (number 1) seems to be drawn in the right place when we run this file as a part of the overall program. Maybe there is some kind of discrepancy as to how much space the computer thinks a "Box" struct should take up?
+
+##Memory Leaks
+
+This might be related to the issue we saw above. The memory from creating boxes and stars to add to arrays and then add to the level struct is not freed. When we try to free it by looping through the box/star arrays here:
+	for (int i = 0; i < l->box_number; i++) {
+		free((&l->boxes)[i]);
+	}
+
+, we get the following error: level(9472) malloc: *** error for object 0x1001002c0: pointer being freed was not allocated
+so maybe the space we are trying to free is not lined up with the space that the box is taking up for some reason.
+
+The Valgrind report is here:
+
+==9412== HEAP SUMMARY:
+==9412==     in use at exit: 5,077 bytes in 9 blocks
+==9412==   total heap usage: 13 allocs, 4 frees, 9,405 bytes allocated
+==9412== 
+==9412== 56 bytes in 1 blocks are definitely lost in loss record 3 of 8
+==9412==    at 0x100010ABD: malloc (vg_replace_malloc.c:274)
+==9412==    by 0x1000010A3: star_allocate (in ./level)
+==9412==    by 0x100001388: star_new (in ./level)
+==9412==    by 0x10000177F: level_initialize (in ./level)
+==9412==    by 0x1000017C9: level_new (in ./level)
+==9412==    by 0x1000018BC: main (in ./level)
+==9412== 
+==9412== 128 bytes in 2 blocks are definitely lost in loss record 6 of 8
+==9412==    at 0x100010ABD: malloc (vg_replace_malloc.c:274)
+==9412==    by 0x100001058: box_allocate (in ./level)
+==9412==    by 0x10000112A: box_new (in ./level)
+==9412==    by 0x10000176E: level_initialize (in ./level)
+==9412==    by 0x1000017C9: level_new (in ./level)
+==9412==    by 0x1000018BC: main (in ./level)
+==9412== 
+==9412== LEAK SUMMARY:
+==9412==    definitely lost: 184 bytes in 3 blocks
+==9412==    indirectly lost: 0 bytes in 0 blocks
+==9412==      possibly lost: 0 bytes in 0 blocks
+==9412==    still reachable: 4,805 bytes in 5 blocks
+==9412==         suppressed: 88 bytes in 1 blocks
+
+The memory from 
+
