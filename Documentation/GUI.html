@@ -1,0 +1,113 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="gui">GUI</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>The Graphical User Interface subsystem, or GUI, is the surface through which players can interact with the game. All of the mouse-events, option selections, and moves that a player makes is captured through the GUI, and sent to the appropriate subsystems that need that information. The linkage between the GUI and the other subsystems will be discussed later in this page.</p>
+<p>The GUI subsystem consists of eight separate .c files:</p>
+<ol style="list-style-type: decimal">
+<li>MainWindow.c</li>
+<li>GameView.c</li>
+<li>AboutDialogWindow.c</li>
+<li>ChatDialogWindow.c</li>
+<li>ColorDialogWindow.c</li>
+<li>LevelDialogWindow.c</li>
+<li>StartupDialogWindow.c</li>
+<li>WinDialogWindow.c</li>
+</ol>
+<p>The .c files #3-8 each implement a dialog window that is a child of the top-level main window, which is created in .c file #1, MainWindow.c. Each of these subcomponents will be described in detail below.</p>
+<h3 id="how-the-gui-fits-together-with-other-subsystems-and-important-inputs-and-outputs">How The GUI Fits Together With Other Subsystems, and Important Inputs and Outputs</h3>
+<p>The GUI captures two important pieces of information: mouse events and text events. These two pieces of information allow our program to capture the following pieces of data from the user:</p>
+<ul>
+<li>Mouse Events
+<ul>
+<li>Toolbar button clicks (which in turn tells the GUI what dialog buttons to load)</li>
+<li>Dialog window button clicks
+<ul>
+<li>The level that has been selected</li>
+<li>The color that has been selected</li>
+</ul></li>
+<li>Stroke-events, or mouse-down-and-drag-across-the-screen actions (which provides all of the necessary information needed to create shapes)</li>
+</ul></li>
+<li>Key Press Events (&quot;Text&quot; Events)
+<ul>
+<li>Username information</li>
+<li>Server port information</li>
+<li>Server address information</li>
+<li>Chat messages</li>
+</ul></li>
+</ul>
+<p>These pieces of information are all sent to the subsystems that require them. Mainly, the GUI sends information to the Client subsystem via the ClientPacketHandler (see <a href="./ClientPacketHandler.html">ClientPacketHandler</a>). The Server subsystem then receives the following pieces of information through the Client Subsystem, and a full connection is established (Details on how that information is passed through is delineated in <a href="./Server.html">Server</a> and <a href="./Client.html">Client</a>.)</p>
+<ul>
+<li>Level Selection</li>
+<li>Color Selection</li>
+<li>Username</li>
+<li>Server Port</li>
+<li>Server Address</li>
+<li>Chat Messages</li>
+</ul>
+<p>There are two additional &quot;inputs&quot; to the GUI that occur via the <a href="./ClientPacketHandler.html">ClientPacketHandler</a>. Two pieces of information are pulled from ClientPacketHandler's asynchronous queue via function calls, both from the Chat Dialog subcomponent of the GUI. The first is the username information needed to identify the sender of a chat message, and the second is the actual message. These two pieces of information are popped off of an asynchronous queue in the ClientPacketHandler when a function call is made to update the Chat Dialog's buffer. Chat Dialog will be discussed in further detail shortly, and more information about the asynchronous queue utilized in the ClientPacketHandler can be found in the <a href="./ClientPacketHandler.html">ClientPacketHandler</a> section.</p>
+<h3 id="data-structures-of-the-gui">Data Structures of the GUI</h3>
+<p>All of the information outlined in the section above are initially captured in the form of data structures in the GUI. The primary data structure is MainWindow, which is created in MainWindow.c. This structure contains the top-level main window, and every other widget that appears in the GUI is a child of that window. The members of this structure are:</p>
+<ol style="list-style-type: decimal">
+<li>window</li>
+<li>game view</li>
+<li>about dialog</li>
+<li>chat dialog</li>
+<li>color dialog</li>
+<li><strong>color</strong></li>
+<li>level dialog<br /></li>
+<li><strong>level number</strong></li>
+<li>startup dialog</li>
+<li><strong>login username entry</strong></li>
+<li><strong>server port entry</strong></li>
+<li><strong>server address entry</strong></li>
+<li>win dialog</li>
+</ol>
+<p>As you can see, each dialog window that is created is a member of the MainWindow structure, and the pieces of information needed by other subsystems (as mentioned previously) are stored in this structure, as indicated in the bold above.</p>
+<p>Other data structures in the GUI are Chat, GameView, and Status. These will be discussed in the .c files in which they are created and utilized (Chat Dialog, Game View, and Win Dialog, respectively).</p>
+<h4 id="the-main-window">The Main Window</h4>
+<p>The Main Window is the main hub through which all of the information collected from dialog windows are stored and accessed (using the MainWindow data structure, as mentioned before).</p>
+<h4 id="the-game-view">The Game View</h4>
+<p>The Game View .c file consists of a data structure that has as members the drawing area, a drawing color, and a stroke ID. For more information regarding strokes, please refer to <a href="./Stroke.html">Stroke</a>. It creates the drawing area, which is the main interface on which a player can draw their shapes via mouse-down events and subsequent mouse-drag actions. These actions are all defined in Game View, which also functions as a go-between for the GUI's drawing area and the <a href="./Graphics.html">Graphics</a> subsystem.</p>
+<h4 id="about-dialog">About Dialog</h4>
+<p><img src="About_dialog_image.png" align="right" style="margin-left:15px;"> The About Dialog displays our team information, as well as any credits and citations that we wished to provide. To reiterate, our citations are as follows:</p>
+<ul>
+<li>Hamster graphics: Molang (c)FEELBug.Yoon</li>
+<li>Icon graphics: http://freebiesbooth.com/wp-content/uploads/downloads/2011/06/025_hand_drawn_icons.zip</li>
+<li>Crumpled Paper Background: http://naldzgraphics.net/textures/lined-paper-texture</li>
+<li>Text graphics: http://www.fonts2u.com/a-fat-child.font</li>
+</ul>
+<h4 id="chat-dialog">Chat Dialog</h4>
+<p><img src="Chat_dialog_image.png" align="right" style="margin-left:15px;"> The Chat Dialog displays a window through which a player can view any messages being sent between players on the same server. Some features added to this dialog are that the username of each message is bolded and displayed in blue, messages typed can be sent using the carriage return key, to emulate the way people are used to messaging, and the chat window can be kept open, closed, and reopened at any time of the game without affecting the player's ability to access other parts of the game. This was an intended design decision, as the other dialog windows (except the Color Dialog) are set to &quot;modal&quot; so that the user has to respond to those dialogs before continuing on with the game.</p>
+<p>The Chat Dialog .c file contains a Chat data structure that has as members the chat window's dialog view, a GtkTextBuffer for the chat view text editor (a scrollable widget embedded in the chat dialog), and a GtkTextIter, which keeps track of the end of the text buffer. This was necessary so that every single time a new chat message is popped off of <a href="./ClientPacketHandler.html">ClientPacketHandler</a>'s asynchronous queue (as discussed previously), the chat view text editor's buffer can be updated properly. Of course, this requires knowledge of where the end of the buffer is, as well as what is already being stored in the buffer; this information is therefore stored in the Chat data structure.</p>
+<h4 id="color-dialog">Color Dialog</h4>
+<p><img src="Color_select_image.png" align="right" style="margin-left:15px;"> The Color Dialog displays buttons that look like paint tubes, which players can select to change the color of their strokes at any point of the game. (Changing the color of a player's &quot;ink&quot; does not change the color of shapes that they previously made.) Like the Chat Dialog, a player can keep this window up and still interface with the drawing area and the rest of this game.</p>
+<h4 id="level-dialog">Level Dialog</h4>
+<p><img src="Level_select_image.png" align="right" style="margin-left:15px;"> The Level Dialog displays star-shaped buttons that indicate a level number. This window allows players to select the level that they wish to play, and captures the level number so that the information can be sent through the ClientPacketHandler, to the Client, to the Server, and then back to the Client for the entire level loading process to occur. More information about this can be found in the <a href="./Server.html">Server</a> subsystem, under <a href="./level.html">Level</a>.</p>
+<h4 id="startup-dialog">Startup Dialog</h4>
+<p><img src="Startup_dialog_image.png" align="right" style="margin-left:15px;"> The Startup Dialog contains text entry widgets that allow a player to start our program by entering a username, server port, and server address. If a username is not entered, then a default &quot;anonymous&quot; is used, and will show up as the identifying username in the chat dialog. However, if a connection cannot be established using the server port and address provided by the player, then an error dialog pops up. A player cannot load any levels until a proper connection is successfully established to a server. Just like the level number information collected from the Level Dialog, the username, server port, and server address are all sent through the Client to the Server subsystems via the <a href="./ClientPacketHandler.html">ClientPacketHandler</a>.</p>
+<h4 id="win-dialog">Win Dialog</h4>
+<p><img src="Win_dialog_image.png" align="right" style="margin-left:15px;"> The Win Dialog simply pops up when a level has been successfully completed (so when the target ball of a given level is dropped into the target basket), and says &quot;you win!&quot;. There are also two options presented to the player in this dialog: restart level and select new level. Restarting a level will simply reset the current level completed, whereas clicking the &quot;select new level&quot; button will pull up the Level Dialog.</p>
+<p>The Win Dialog .c file contains a Status data structure that has as its only member a status_is_win variable, which is updated to a 1 whenever the target ball is dropped into the target basket of a level. This allows the current status of the game to be checked with every step of the GUI time handler so that as soon as the level has been completed, the Win Dialog can pop up at the right time. Of course, once the Win Dialog window does pop up, the status_is_win variable is reset to 0.</p>
+<h3 id="public-functions">Public Functions</h3>
+<p>The public functions in the GUI are primarily the <em>create</em> and <em>run</em> functions associated with each dialog. These functions are made public so that they can be called in MainWindow.c. Of course, the <em>create</em> functions are called in MainWindow.c along with the allocation of space for and initialization of the top-level window that is in the MainWindow data structure, while the <em>run</em> functions are called via GTK callback functions for toolbar button press events.</p>
+<p>GameView.c and MainWindow.c also provide some public functions. GameView.c has public functions for the initialization and allocation of the drawing area that MainWindow must access. MainWindow.c has a public function that allows <a href="./ClientMain.html">ClientMain</a> to call its own creation at the start of the program. There is also a public function that ClientMain can access from MainWindow.c that allows ClientMain to start the running of the GTK main loop, which ends in the destruction of the MainWindow structure, the top-level window, and all of its children when a player decides to exit the program.</p>
+<p>There are two subcomponents of the GUI that also provide public functions that must be accessed by the <a href="./ClientPacketHandler.html">ClientPacketHandler</a>, so that the ClientPacketHandler can add username, server port, server address, level number, and chat message data to its queue in order to send that information along to the Client and Server. Those two subcomponents are the Chat Dialog and the Startup Dialog. This is discussed in further detail in the <a href="./ClientPacketHandler.html">ClientPacketHandler</a> section.</p>
+<h3 id="private-functions">Private Functions</h3>
+<p>The rest of the functions in the GUI are private, and can only be accessed within the .c file. These private functions are primarily callback functions associated within each dialog, which means there is never a need for another .c file to have access to these functions. For example, button_click callback functions for each dialog can be used to show and hide the dialog window, as shown below:</p>
+<p>static void button_new_level_click(GtkWidget* widget, MainWindow* main_window) { gtk_widget_hide(main_window-&gt;win_dialog); level_dialog_run(NULL, main_window); }</p>
+<p>static void button_cancel_click(GtkWidget* widget, MainWindow* main_window) { gtk_widget_hide(main_window-&gt;win_dialog); }</p>
+<p>This example was pulled from WinDialogWindow.c, and shows how button click events can be used to show and hide a dialog window. It is of note that each dialog window is simply shown/hidden, not created/destroyed after an initial creation, so that every single time a player decides to click on a toolbar item a new GTK widget and dialog does not have to be made. At the end of the program, of course, all of these dialogs and widgets are destroyed when the top-level GTK window is destroyed via a callback function associated with an EXIT toolbar button.</p>
+<p>Overall, the GUI is structured in this modular fashion such that each dialog window has its own .c file with only the functions that the dialog needs to function properly. This design allowed for dialog windows to be created and tested for functionality manually and individually, and accounts for the difficult nature of trying to run <em>valgrind</em> and <em>gdb</em> analyses on GTK functions. Finally, creating individual .c files and making only the functions that needed to be accessed by MainWindow.c and ClientPacketHandler.c public allowed for organization and clarity of code, as the numerous functions and declaring of GTK widgets under one <strong><em>long</em></strong> GUI.c file would become unmanageable and unscalable as features are added.</p>
+</body>
+</html>

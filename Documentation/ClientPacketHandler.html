@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="clientpackethandler">ClientPacketHandler</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>ClientPacketHandler facilitates the movement of different types of <a href="./Packet.html">Packets</a> going to and from the <a href="./Client.html">Client</a> by pushing to and popping from the client's send and receive queues.</p>
+<h2 id="gui-to-client-communication">GUI to Client Communication</h2>
+<p>The GUI can send the following types of information to the ClientPacketHandler to be sent through the <a href="./Client.html">Client</a> to the <a href="./Server.html">Server</a>:</p>
+<ol style="list-style-type: decimal">
+<li>Chat message from chat dialog window</li>
+<li>Username from login dialog window</li>
+<li>Level from level selection window</li>
+<li>Mouse movements from interaction with drawing area: mouse down, mouse move, mouse up</li>
+</ol>
+<p>The ClientPacketHandler provides separate public functions to transmit each of these types of information. It passes the information along by first packaging it in its appropriate <a href="./Packet.html">Packet</a> type and then pushing the packet onto the Client's send queue.</p>
+<h2 id="client-to-gui-communication">Client to GUI Communication</h2>
+<p>ClientPacketHandler receives the following types of information from the <a href="./Server.html">Server</a> to be passed to the <a href="./GUI.html">GUI</a>:</p>
+<ol style="list-style-type: decimal">
+<li>Send chat username (of user who entered chat message) and chat message together to chat dialog window</li>
+<li>Send level win signal to open level win dialog window</li>
+</ol>
+<p>The packets are unpacked and the information within them is sent by calling functions defined within the <a href="./GUI.html">GUI</a>.</p>
+<p>Every once in a while (i.e. every time the client thread goes through its while loop), ClientPacketHandler's <em>cph_process_queue</em> is called by the <a href="./Client.html">Client</a>. This function will process every packet currently lined up to be sent to the <a href="./GUI.html">GUI</a> and <a href="./ClientWorld.html">ClientWorld</a> from the Client's receive queue.</p>
+<h2 id="client-to-clientworld-communication">Client to ClientWorld Communication</h2>
+<p>Other packets in the Client's receive queue (received from Server) that are related to drawing are passed to the <a href="./ClientWorld.html">ClientWorld</a>. These packets are of the following types:</p>
+<ol style="list-style-type: decimal">
+<li>New stroke: Initialize a new stroke object in the ClientWorld</li>
+<li>Add a point to current stroke</li>
+<li>Delete a stroke</li>
+<li>Update the position, rotation of a stroke to reflect its movement in the physical world</li>
+<li>Clear all strokes from the world</li>
+</ol>
+<p>The information contained in these packets is unpacked and then transferred to <a href="./ClientWorld.html">ClientWorld</a> by calling ClientWorld functions.</p>
+<h2 id="additional-function-ink-left">Additional Function: Ink Left</h2>
+<p>An additional function of ClientPacketHandler is to retain data about how much &quot;ink&quot; the user has left in producing the current stroke. The ClientPacketHandler struct follows the same Singleton design pattern described in <a href="./Client.html">Client</a> to store the variable ink.</p>
+<p>Ink is a number between 0 and 255 that describes the amount of ink left at any given time. The singleton ClientPacketHandler allows <a href="./Graphics.html">Graphics</a> to access the ink value whenever needed to update the graphical display of ink remaining without modifying the value. The value of ink is tracked by the <a href="./Stroke.html">Stroke</a> and is periodically updated in ClientPacketHandler as the stroke is drawn.</p>
+</body>
+</html>

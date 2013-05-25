@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="world">World</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>The World provides some of the most important functions to the <a href="./Game.html">game</a>. At a very high level, the World's only job is to connect the cpSpace to the <a href="./Stroke.html">Stroke</a>. To do this, the World must do two very important things.</p>
+<ol style="list-style-type: decimal">
+<li>Load a cpSpace</li>
+<li>Manipulate Strokes</li>
+</ol>
+<h2 id="structure">Structure</h2>
+<p>The World structure only contains three members: a GArray of <a href="./Stroke.html">Strokes</a>, a cpSpace, and a counter variable (called num_strokes). The first two members will be discussed in the following sections. The counter variable, however, is not exactly a counter. Every time a new <a href="./Stroke.html">Stroke</a> is added to the World, the <a href="./Stroke.html">Stroke</a> must be assigned a unique id. num_strokes provides this id. The name num_strokes is, however, slightly misleading, as it never decreases. A better name would have been num_strokes_existed or even next_stroke_id.</p>
+<h2 id="loading-a-cpspace">Loading a cpSpace</h2>
+<p>Although <a href="./WorldPhysics.html">WorldPhysics</a> is in charge of loading the cpSpace from the <a href="./level.html">level</a>, World has to be able to take this cpSpace and represent turn its cpBodies into <a href="./Stroke.html">Strokes</a>. This process begins in the world_load_space function, which in turn calls the world_shape_iterate function. In this function, cpShapes are processed and turned into <a href="./Stroke.html">Strokes</a>, which are then linked to the cpBody (see <a href="./Stroke.html">Stroke</a>) and added to the World's hash table.</p>
+<h2 id="stroke-manipulation">Stroke Manipulation</h2>
+<p>The World provides functions that add, remove, modify, and get <a href="./Stroke.html">Strokes</a>. These functions are all fairly trivial and mostly exist to link the <a href="./ServerPacketHandler.html">ServerPacketHandler</a> to the World.</p>
+<h2 id="triangulation">Triangulation</h2>
+<p>When a <a href="./Stroke.html">Stroke</a> is finished, several functions get called. First, the <a href="./Stroke.html">Stroke</a> is analyzed (see <a href="./Stroke.html">Stroke</a>). If the <a href="./Stroke.html">Stroke</a> is a circle, then a cpBody and cpShape are constructed and added to the cpSpace. If the <a href="./Stroke.html">Stroke</a> is a polygon and it fails cpPolyValidate, then it must be triangulated.</p>
+<p>Of the three algorithms that I wrote (polygon approximation, circle detection, and triangulation), the triangulation algorithm is by far the slowest and least elegant. However, it works, and for our purposes, it runs fast enough. At a high level, the algorithm employs <a href="http://en.wikipedia.org/wiki/Polygon_triangulation#Ear_clipping_method">ear clipping</a>. In order to work effectively, though, once an ear is identified, all other points must be checked to ensure that no points exist inside the ear that is to be clipped. In the case that the ear has a point inside it, the ear is skipped. If the entire polygon is traversed without finding a valid ear, then the triangulation fails.</p>
+<p>According to the two-ear theorem, every simple polygon has at least two ears. Therefore, ever time the polygon's vertices are traversed, at least two ears are found and removed. The amount of work required is therefore approximately: N + N-2 + N-4 + ... + N-N = (N^2)/2 + (N^2)/4 = 3/4 * N^2 = O(N^2). However, when an ear is found, another order N operation must be performed to check if it overlaps any other ears. This must, in some way, negatively affect the runtime. I would guess that the runtime is somewhere between O(N^2) and O(N^3) or worse.</p>
+<p>If an ear is not found after traversing the entire polygon, then the polygon is necessarily invalid and the triangulation fails. Sometimes, invalid polygons don't fail triangulation. In this case, the behavior is undefined. One way to fix this would be to check the polygon for self-intersections. If there are any self-intersections, then the polygon is necessarily invalid and should be discarded.</p>
+</body>
+</html>

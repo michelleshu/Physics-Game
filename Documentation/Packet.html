@@ -1,0 +1,106 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="packet">Packet</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>The Packet encompasses the sending and receiving of data over the network. Packets can contain the following types: int, double, byte, string, and Packet.</p>
+<h2 id="structure">Structure</h2>
+<p>Under the hood, a Packet is just an array of char. The only character that is inherently special is the first one, which contains the PACKET_TYPE. PacketType is an enumerated value defined in Packet.h. Except for the PACKET_TYPE_SEND_MESSAGE and PACKET_TYPE_SEND_NAME types, a length is not incuded in the packet. This is because every packet of a certain type is the same size. The sizes of the packets are defined in PACKET_SIZES in Packet.h. Each entry in PACKET_SIZES corresponds to an enumerated PacketType. This way, retrieving the size for a given type of packet is trivial.</p>
+<p>The PacketIndex enumerated type contains the indeces for the various elements of each packet type. This type had to be carefully created such that the values didn't overlap. It relies on the fact that ints and floats are 4 bytes, doubles are 8 bytes, and shorts are 2 bytes. These conditions are checked for each time a Packet is constructed. So far, this has not been a problem. In theory, the packet could be generalized such that these conditions are not necessary. However, it was not required for us to make this change.</p>
+<h2 id="packet-typespacket-indices">Packet Types/Packet Indices</h2>
+<ul>
+<li>PACKET_TYPE_SEND_MESSAGE : Send a chat message
+<ul>
+<li>SEND_MESSAGE_LENGTH : byte</li>
+<li>SEND_MESSAGE_TEXT : string</li>
+</ul></li>
+<li>PACKET_TYPE_SEND_NAME : Send a chat user name
+<ul>
+<li>SEND_NAME_LENGTH : byte</li>
+<li>SEND_NAME_NAME : string</li>
+</ul></li>
+<li>PACKET_TYPE_MOUSE_DOWN : Send a mouse down event
+<ul>
+<li>MOUSE_DOWN_X : double</li>
+<li>MOUSE_DOWN_Y : double</li>
+<li>MOUSE_DOWN_SHAPE_TYPE : byte</li>
+<li>MOUSE_DOWN_FILL : byte</li>
+<li>MOUSE_DOWN_WIDTH : double</li>
+<li>MOUSE_DOWN_R : double</li>
+<li>MOUSE_DOWN_G : double</li>
+<li>MOUSE_DOWN_B : double</li>
+</ul></li>
+<li>PACKET_TYPE_MOUSE_MOVE : Send a mouse move event
+<ul>
+<li>MOUSE_MOVE_X : double</li>
+<li>MOUSE_MOVE_Y : double</li>
+</ul></li>
+<li>PACKET_TYPE_MOUSE_UP : Send a mouse up event
+<ul>
+<li>MOUSE_UP_X : double</li>
+<li>MOUSE_UP_Y : double</li>
+</ul></li>
+<li>PACKET_TYPE_NEW_STROKE : Create a stroke with the given information
+<ul>
+<li>NEW_STROKE_ID : int</li>
+<li>NEW_STROKE_X : double</li>
+<li>NEW_STROKE_Y : double</li>
+<li>NEW_STROKE_SHAPE_TYPE : byte</li>
+<li>NEW_STROKE_FILL : byte</li>
+<li>NEW_STROKE_WIDTH : double</li>
+<li>NEW_STROKE_R : double</li>
+<li>NEW_STROKE_G : double</li>
+<li>NEW_STROKE_B : double</li>
+</ul></li>
+<li>PACKET_TYPE_ADD_POINT : Add a point to the given stroke
+<ul>
+<li>ADD_POINT_ID : int</li>
+<li>ADD_POINT_X : double</li>
+<li>ADD_POINT_Y : double</li>
+</ul></li>
+<li>PACKET_TYPE_DELETE : Delete a stroke
+<ul>
+<li>DELETE_ID : int</li>
+</ul></li>
+<li>PACKET_TYPE_UPDATE : Update the position and rotation of a stroke
+<ul>
+<li>UPDATE_ID : int</li>
+<li>UPDATE_X : double</li>
+<li>UPDATE_Y : double</li>
+<li>UPDATE_ROTATION : double</li>
+</ul></li>
+<li>PACKET_TYPE_CLEAR_ALL : Clear the entire screen</li>
+<li>PACKET_TYPE_PACKETS : A packet packet</li>
+<li>PACKET_TYPE_NEW_CONNECTION : Put on the receive queue to signify a new connection</li>
+<li>PACKET_TYPE_LOAD_LEVEL : Load the given level
+<ul>
+<li>LOAD_LEVEL_LEVEL : byte</li>
+</ul></li>
+<li>PACKET_TYPE_INK_POT : Set the ink pot to the given level
+<ul>
+<li>INK_POT_INK : byte</li>
+</ul></li>
+<li>PACKET_TYPE_LEVEL_WIN : A level has been won</li>
+</ul>
+<h2 id="storage">Storage</h2>
+<p>As was previously stated, a Packet is just an array of chars. However, this array of chars is not a string. Therefor, an integer takes 4 bytes, a double takes 8, etc. The PacketIndex enumerated value displays this implicitly. To set or get a value to a packet, you must call the function that corresponds to the type that you wish to set or get. These functions take a Packet, the value, and then a PacketIndex enum. The value is then inserted, byte by byte, into the packet at the given index. Any value may be inserted into any index of any PacketType. No type checking happens. Therefor, the developer must be careful to use only the specifieds indexes with their corresponding values and PacketTypes.</p>
+<h2 id="ensuring-cross-platform-compatability">Ensuring Cross-Platform Compatability</h2>
+<p>In order to ensure cross-platform compatability over the network, byte order must be preserved. Functions such as htons are provided, but Packet does not use them. Lets say that a Packet has been constructed and packet_add_int has been called with an integer and an index. The value is inserted inserted at the index given by iterating over the bytes of the integer. Bytes are accessed using the right shift operator. The value is anded with 0xFF and then the resulting 8 bits (after being cast to a char) are put into the Packet at index. The value is then left shifted by 8 and anded with 0xFF again. That value is then cast to a char and added to index + 1. This process is continued until all 4 bytes (in the case of an int) are placed into the Packet. To access values from a Packet, this process is simply reversed. To store a double, the double is first stored into a union that contains a double and a long. The value is then extracted as a long. This way, the bit order is preserved. On the receiving end, this process is also reversed. Because binary right and left shift operations do not change between systems, this method of encoding binary data in Packets is compatible on all platforms.</p>
+<h2 id="sending-packets">Sending Packets</h2>
+<p>Because a Packet is just an array of chars, send() can be called directly on a Packet. The packet length is retrieved using packet_get_length.</p>
+<h2 id="receiving-packets">Receiving Packets</h2>
+<p>The Packet provides functionality for receiving packets. The magic happens in the packet_new_from_file_descriptor function. When select returns on the <a href="./Server.html">server</a> and new data has been detected, the <a href="./Server.html">server</a> calls this function and passes in the file descriptor that contains the new data. As it happens, this is the only place in our code where the recv function is called. First, only 1 byte is requested. Because of the structure of a Packet, this byte will always be the PacketType. Because all Packets of a given PacketType are the same length, receiving the rest of the packet is trivial. In the case of PACKET_TYPE_SEND_MESSAGE and PACKET_TYPE_SEND_NAME, a second byte must be received after the PacketType. This is because the second byte contains the length of the string that the Packet contains. Once this length is obtained, the rest of the Packet can be received.</p>
+<h2 id="packet-packets">Packet Packets</h2>
+<p>Yo dawg. I heard you like Packets, so I put a Packet in your Packet so you can Packet while you Packet.</p>
+<p>At times, we found that it would be useful to be able to group packets together. Hence, the Packet Packet was born. However, using Packet Packets is quite a bit slower than using normal packets. This is due to the fact that the length must be calculated. Insertion is, in many ways, similar to a linked list. You must iterate through the packet in order to find the length so that more data can be added. Several of the function that work on Packet Packets are recursive, including packet_new_from_file_descriptor. In theory, you could add Packet Packets to Packet Packets. However, this operation is untested. Attempting to add a Packet Packet to a Packet Packet currently throws an assertion.</p>
+</body>
+</html>

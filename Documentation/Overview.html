@@ -1,0 +1,73 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="screamin-green-documentation">Screamin* Green Documentation</h1>
+<h2 id="contributors">Contributors</h2>
+<h4 id="jacob-weiss-eliza-hanson-joyce-chung-michelle-shu">Jacob Weiss, Eliza Hanson, Joyce Chung, Michelle Shu</h4>
+<h2 id="overview">Overview</h2>
+<h3 id="strengths">Strengths</h3>
+<ol style="list-style-type: decimal">
+<li>Rapid, efficient network communication (i.e. no lag): Due to our simplified representation of shapes (see <a href="./Stroke.html">Stroke</a>), drawings are loaded to the graphical display in an efficient manner, so we experience no lag. Also, the Packet structure enables small amounts of information to travel quickly to their proper destinations over the network.</li>
+<li>Stable: As far as we know, the program is reliable and will not crash, even with many users drawing shapes simultaneously over the network.</li>
+<li>Information Flow and High Level Design: The flow between subsections is organized and streamlined. Everything has its place and there are few (if any) unnecessary components bogging down the program.</li>
+</ol>
+<h3 id="weaknesses">Weaknesses</h3>
+<ol style="list-style-type: decimal">
+<li>Some files (such as <a href="./Packet.html">Packet</a>) lack commenting and may not be as readable to developers.</li>
+<li>Memory leaks may still exist. We didn't thoroughly examine the Valgrind reports for our server and client code, because we couldn't manage to suppress errors that were purely a result of GTK or exiting the server abruptly with Ctrl-C.</li>
+<li>Some minor aspects of <a href="./ServerMain.html">ServerMain</a> are not entirely compatible with Linux as they stand. We use functions for timekeeping and signalling that work in Mac but not Linux.</li>
+</ol>
+<h3 id="bugs">Bugs</h3>
+<p>The code found in the RELEASE folder of our svn repository is fully functional and bug free, in the sense that it will not crash. However, there are several imperfections that we have found.</p>
+<ol style="list-style-type: decimal">
+<li>In the <a href="./Client.html">Client</a>, cph_process_queue is being called in the client thread. This caused a race condition when a <a href="./Stroke.html">stroke</a> gets deleted from the world in the middle of the graphics callback. This bug was fixed by adding a property to the stroke called is_dead. When the stroke got destroyed, is_dead would be set to TRUE. Graphics would then know not to draw that stroke. In RELEASEv2, cph_process_queue was moved into a g_timeout where it gets called from the main thread. This was the intended behavior of the code.</li>
+<li>If a stroke is drawn that intersects itself, there is a chance that triangulation will not fail and the stroke will be considered valid. In this case, the outcome of the physics engine is undefined. Sometimes it will collide with other objects, and sometimes it will not. To fix this, we would simply need to implement a check to make sure that strokes do not intersect themselves.</li>
+<li>When the user exits the GUI, the thread that runs the <a href="./Client.html">client</a> is not explicitly closed. A function for this is provided (client_stop) and adding it to the close procedure would be trivial, but we forgot to.</li>
+</ol>
+<table>
+<tr>
+<td style="vertical-align: top;">
+<h2 id="index">Index</h2>
+<ul>
+<li><a href="./Game.html">Game</a></li>
+<li><a href="./Server.html">Server</a>
+<ul>
+<li><a href="./ServerMain.html">ServerMain</a></li>
+<li><a href="./ServerPacketHandler.html">ServerPacketHandler</a></li>
+<li><a href="./level.html">level</a></li>
+<li><a href="./World.html">World</a></li>
+<li><a href="./WorldPhysics.html">WorldPhysics</a></li>
+</ul></li>
+<li><a href="./Client.html">Client</a>
+<ul>
+<li><a href="./ClientMain.html">ClientMain</a></li>
+<li><a href="./ClientPacketHandler.html">ClientPacketHandler</a></li>
+<li><a href="./Graphics.html">Graphics</a></li>
+<li><a href="./ClientWorld.html">ClientWorld</a></li>
+<li><a href="./GUI.html">GUI</a></li>
+</ul></li>
+<li>Global
+<ul>
+<li><a href="./Packet.html">Packet</a></li>
+<li><a href="./Stroke.html">Stroke</a>
+</td>
+<td>
+<img src="./Flow%20Chart.png" alt="Figure 1" />
+</td>
+</tr>
+</table>
+
+
+</li>
+</ul></li>
+</ul>
+</body>
+</html>

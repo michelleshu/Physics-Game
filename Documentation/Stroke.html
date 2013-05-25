@@ -1,0 +1,56 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="stroke">Stroke</h1>
+<table>
+<tr>
+<td style="vertical-align: top;">
+
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>Strokes contain all the information required for <a href="./Graphics.html">graphics</a> to draw.</p>
+<h2 id="uses">Uses</h2>
+<p>Strokes are used in many places throughout the code. Both the <a href="./World.html">World</a> and <a href="./ClientWorld.html">ClientWorld</a> maintain GHashTables of Strokes. <a href="./Graphics.html">Graphics</a> loops through the client-side hash table and draws all the strokes which it contains. Although both the <a href="./ClientPacketHandler.html">ClientPacketHandler</a> and <a href="./ServerPacketHandler.html">ServerPacketHandler</a> deal with packets pertaining to Strokes, they don't manipulate them in any significant way.</p>
+<h2 id="structure">Structure</h2>
+<p>Along with all the required drawing information; such as color, width, and fill; the Stroke structure also contains properties that represent position and rotation.</p>
+<p>Each Stroke has an x coordinate, y coordinate, and theta. Every point added to a stroke is added relative to the current x, y coordinates of the Stroke.</p>
+<p>Stroke_get_positionand stroke_get_rotation do not access these variables directly. Instead, there exists one level of indirection. The Stroke structure also contains three pointers to doubles, body_x, body_y, and body_theta. Upon initialization, these point to the x, y, and theta properties within the Stroke. Using the functions, stroke_set_body_position and stroke_set_body_rotation, these pointers can be made to point to any value. Specifically, this is useful because these values can be set to point to the x, y, and rotation values of a cpBody. This keeps the position of the Stroke and its cooresponding cpBody in sync.</p>
+<h2 id="polygon-detection-algorithm">Polygon Detection Algorithm</h2>
+<p>One awesome feature of a Stroke is that it can approximate itself as a polygon. I do not claim to be the first to invent this algorithm, but I did come up with it on my own. Its implementation can be found in Stroke.c within the function stroke_analyze_shape_in_range.</p>
+<p>This recursive function takes two points as parameters. Initially, stroke_analyze_shape_in_range is called from the function stroke_analyze_shape with the first and last point of the stroke as parameters.</p>
+<p>In step 1, a line is created connecting the two input points. Then, we loop through the points on the stroke in between the two input points. We then calculate the distance between each point on the stroke and the line. During this process, the point farthest from the line is remembered. The root-mean-square average of these distances is then taken.</p>
+<p>If this average is below a set threashold (#defined as RMS_MIN), then we know that the two input points are vertices of the polygon.</p>
+<p>If this average is above the set threshold, then the function recurses twice: from the first input point to the farthest point, and then from the farthest point to the second input point.</p>
+<p>Note: By adjusting the threshold (RMS_MIN), one can adjust the algorithm's pickyness. A smaller value of RMS_MIN will cause the algorithm to require a closer match between the approximation line and the Stroke. A larger value will allow for greater approximations to be made.</p>
+<p>Now, let's talk about run time. Each recurse, the algorithm must do three things. First, it must find the root-mean-square average, a linear time operation. Second, it must find the farthest point (which it actually does at the same time that it takes the root-mean-square average), which is also a linear time operation. Third, it must merge the arrays of vertices returned from deeper recursive calls. This is also performed in linear time. Therefore, all operations done during the reucurse are linearly dependent on the number of points being operated on.</p>
+<p>In the best case, each recurse splits the stroke into two equal pieces. Another way of saying this is that the farthest point is also the midpoint. In this case, the algorithm runs like merge sort, O(nlogn). However, the base case of this algorithm is not a single point, but a single side. Therefore, the algorithm runs more like O(nlogm), where m is the number of sides of the analyzed polygon.</p>
+<p>Theoretically, the worst case would be that the farthest point is always the point directly adjacent to the first or last input point. Although this case is extremely unlikely (and may be impossible), it should be noted that the run time would be O(n^2).</p>
+<p>Running this algorithm on Strokes has several major benefits and very few costs. First, by removing the majority of points from a Stroke, <a href="http://www.chipmunk-physics.net/">Chipmunk</a> has fewer shapes to simulate in its space, and is able to run faster. <a href="./Graphics.html">Graphics</a> also has an easier time as it has to draw fewer line segments per polygon.</p>
+<p>From a user perspective, when you try to draw a box, you get something that looks quite box-like instead of a misshapen-boxish-blob-thing. As a side affect, this makes it easier to stack polygons on top of one another, which is integral to our <a href="./Game.html">game</a>.</p>
+<h2 id="circle-detection-algorithm">Circle Detection Algorithm</h2>
+<p>The algorithm used to detect circles is, in many ways, similar to the polygon algorithm. However, it is much simpler. First, the bounding box of the Stroke is calculated. We then find the center of the bounding box. For a perfectly drawn circle, the center of the circle and the center of the circle's bounding box should be one in the same. Then, we take the average of the bounding box's width and height. This is taken to be two times the ideal radius of the circle. Next, we iterate over all the points on the stroke and take distance between each point and the calculated center. Then we take the difference between this distance and the ideal radius. Finally, we take the root-mean-square average of all of these differences. If the rms divided by the ideal radius is below a certain value (#defined CIRCLE_RMS), then the stroke is taken to be a circle with the calculated center and radius.</p>
+<p>This algorithm has to run over the entire Stroke two times: once for the bounding box, and once for the rms. Therefore, it runs in O(n) time. For this reason, it runs before the polygon algorithm. If the Stroke is determined to be a circle, then the polygon algorithm does not run.</p>
+<h2 id="why-not-use-cpshape">Why not use cpShape?</h2>
+<p>cpShapes were not used on the <a href="./Client.html">client</a> side for two reasons.</p>
+<p>First, because <a href="http://www.chipmunk-physics.net/">Chipmunk</a> cannot simulate concave polygons, we must triangulate them. This means that every cpBody contains many cpShapes (one for each triangle). In order to draw a cpBody, one must have a representation of the outline of the cpBody to be drawn. Since the body contains many cpShapes, it would be very difficult to differentiate between the internal edges of a triangulated polygon and the external edges. Therefore, it makes sense to have a data structure that only represents the outside edges.</p>
+<p>Second, it makes sense from a design perspective to isolate the <a href="http://www.chipmunk-physics.net/">Chipmunk</a> library from the client side. Because physics simulation does not happen client-side, it doesn't make sense to force the client to have a working copy of the <a href="http://www.chipmunk-physics.net/">Chipmunk</a> library.</p>
+<img src="./AlgorithmBefore.png" alt="Before Algorithm" /> <img src="./AlgorithmAfter.png" alt="After Algorithm" />
+</td>
+<td style="vertical-align: top;">
+<img src="./Algorithm.png" />
+</td>
+</tr>
+</table>
+
+
+
+</body>
+</html>

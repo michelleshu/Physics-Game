@@ -1,0 +1,32 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="client">Client</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>Each player that joins the game runs their own client. The client receives user input (in the forms of chat messages, drawings, level selection, etc.) to be sent to the <a href="./Server.html">Server</a>, which echoes the information back to all clients. Thus, the client also receives information from the server and passes that information along to the appropriate recipients. All lines of communication go through the <a href="./ClientPacketHandler.html">ClientPacketHandler</a>. The Client itself is only responsible for connecting to the server via a socket and maintaining queues of <a href="./Packet.html">Packets</a> going to and coming from the server.</p>
+<h2 id="singleton-design-pattern">Singleton Design Pattern</h2>
+<p>To avoid using a global variable to store the client's socket file descriptor, we use a singleton design pattern for the client. Client is a structure containing all necessary details about a single client: the file descriptor, server port, send and receive queues, and the client thread. Only one client struct can be constructed by each user. After it is created, the client is connected to the server with a specific configuration and any function can retrieve information about the connection without modifying it. This Singleton structure is achieved by using a static Client variable initialized to null in <em>client_get</em>. A new client is initialized only if the client is null at the time of call.</p>
+<h2 id="send-and-receive-queues">Send and Receive Queues</h2>
+<p>The client maintains two queues:</p>
+<ol style="list-style-type: decimal">
+<li>Send queue: Contains packets received from GUI to be sent to the Server.</li>
+<li>Receive queue: Contains packets received from Server to be displayed in the client's graphics window.</li>
+</ol>
+<p>Please reference <a href="./ClientPacketHandler.html">ClientPacketHandler</a> for details on how these packets are transferred to their appropriate destinations.</p>
+<p>The threadsafe GAsynchronousQueue from GLib 2.0 is the data structure used to represent the send and receive queues of the client. <a href="./Packet.html">Packets</a> are delivered to the client by getting pushed onto the client's receive or send queue (depending on which direction they are going) and delivered by being popped off. The client does not distinguish between different types of packets. The client does provide public functions for sending packets (called by <a href="./Server.html">Server</a>) and receiving packets (called by <a href="./ClientPacketHandler.html">ClientPacketHandler</a>).</p>
+<h2 id="initializing-and-destroying-clients">Initializing and Destroying Clients</h2>
+<p>The client is not explicitly initialized in <em>ClientMain.c</em> (which runs the main program on the client's side). Instead, it is created on the fly at the first instance at which it is needed. This happens to be when the user logs in and provides the server's port and IP address. At this point, the <a href="./GUI.html">LoginDialogWindow</a> tells <a href="./ClientPacketHandler.html">ClientPacketHandler</a> to send information to the client. Since the client does not exist yet, when <em>client_get</em> is called in this process, the client is created. During initialization, a socket is created for the client and the socket file descriptor stored in the Client struct.</p>
+<p>The client can be cleanly stopped when the public function <em>client_stop</em> is called (when the graphics thread terminates).</p>
+<h2 id="threading">Threading</h2>
+<p>Each client has its own thread to handle client communication. The thread is created when the client is initialized and stored as a variable in the client struct.</p>
+</body>
+</html>

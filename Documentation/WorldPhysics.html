@@ -1,0 +1,38 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="worldphysics">WorldPhysics</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>WorldPhysics is the physical representation of a given world and all the bodies it contains. This is where the physical forces of gravity, inertia and friction on bodies are calculated and where shape collisions are detected. The state of the WorldPhysics environment is communicated to <a href="./World.html">World</a>, where physics objects are translated into strokes that can then be displayed in the graphical view of the world. WorldPhysics runs on the server side of this application, not on the client side.</p>
+<h2 id="chipmunk">Chipmunk</h2>
+<p>The major data structures used to represent the world in WorldPhysics are from the <a href="http://www.chipmunk-physics.net/">Chipmunk Physics</a> library. The world itself is nothing more than a cpSpace containing cpShapes attached to cpBodies. Chipmunk takes care of simulating the motion and behavior of the bodies over time.</p>
+<h2 id="loading-level-environments">Loading Level Environments</h2>
+<p>WorldPhysics instantiates cpBodies and cpShapes from pre-made level configurations (<a href="./level.html">Level</a> structures). It uses the body/shape properties provided (x, y, width, height, radius, color, etc) to create the appropriate cpBodies and cpShapes and add them to the cpWorld. For the purposes of our game, none of the shapes that are part of the except for the ball need to move, so all shapes except the ball are attached to the static body of the cpSpace.</p>
+<h3 id="dimensions">Dimensions</h3>
+<p>For uniformity, we normalize the dimensions of the cpSpace to be 1 x 1 by dividing by the level's specified width and height where necessary.</p>
+<h3 id="body-attributes">Body Attributes</h3>
+<p>When a shape is added to WorldPhysics from the Level struct, all information associated with that shape that will be used down the line in <a href="./World.html">World</a> is stored as the user data of that shape in a struct called BodyAttributes. BodyAttributes holds the type of the shape and its color, which will eventually be accessed and used to convert the shape into a <a href="./Stroke.html">Stroke</a> and then to draw it.</p>
+<h2 id="addition-of-bodiesshapes-and-physics-simulation">Addition of Bodies/Shapes and Physics Simulation</h2>
+<p>Bodies and shapes are added to physics world from within <a href="./World.html">World</a>, which contains the cpSpace controlled by WorldPhysics in the World struct. WorldPhysics simulates the physical changes that occur in one timestep with the function <em>world_physics_step</em>, which steps the cpSpace.</p>
+<h2 id="collision-detection">Collision Detection</h2>
+<p>WorldPhysics uses collision callbacks (a functionality provided by Chipmunk) to respond to two shapes colliding. Specifically, there are 3 types of callbacks of interest:</p>
+<ol style="list-style-type: decimal">
+<li>When two shapes drawn by the same user collide, all bodies and shapes involved in the collision are destroyed. (They are removed from the physics world and this information is communicated to the graphical world to remove them there also.)</li>
+<li>When a shape falls far out of bounds of the game screen (out of view of the user), it will collide with a destruct border, which destroys the body to which the shape is attached and all other shapes on that body.</li>
+<li>When the ball collides with the goal, the game is won. This is communicated to the <a href="./Server.html">Server</a> via a Level Win <a href="./Packet.html">Packet</a>.</li>
+</ol>
+<h2 id="functions">Functions</h2>
+<p>WorldPhysics contains private helper functions that load the objects that are part of the level. All these objects are loaded when the public function <em>world_physics_load</em> is called. Objects that are added by the user(s) are added to the cpSpace by <a href="./World.html">World</a>.</p>
+<p>Most of the public functions of WorldPhysics provide means for the <a href="./Server.html">Server</a> to control the game state. There are functions available to create, load, clear and destroy physics worlds as users select new levels to play.</p>
+<p>The function <em>world_physics_collision_add_type</em>, provides the capability for a user to &quot;register&quot; with the physics world. WorldPhysics assigns a unique collision type id to each user who joins the game to enable detection of collisions involving shapes drawn by the same user.</p>
+</body>
+</html>

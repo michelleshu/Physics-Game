@@ -1,0 +1,85 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="level">level</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>The level subcomponent of the <a href="./Server.html">Server</a> subsystem is simply where .lvl files are opened and read so that data structures that store information for every shape that is initially present in a given level can be initialized.</p>
+<p>An example .lvl file is shown below:</p>
+<p>LEVEL 1 5 3 0<br />WORLD 40 30<br />BOX 10 20 5 8 1 0 0 1<br />BOX 10 26 18 5 1 0 1 0<br />BOX 10 32.5 27 5 1 1 0 0<br />BOX 10 30.5 25.5 1 2 1 0 0<br />BOX 10 34.5 25.5 1 2 1 0 0<br />POLY 10 10 13 3 0 0 4 0 0 -4 0 1 0<br />POLY 10 29 13 3 0 0 0 -4 -4 0 0 1 0<br />POLY 10 22.5 17 3 0 0 -13.5 4 0 4 0 1 0<br />BALL 0.001 20 0 1 0.9 0.6 0<br />GOAL 31 26.5 34 26.5</p>
+<p>The first line of a .lvl file always begins with LEVEL. The numbers following LEVEL represent the following pieces of information:</p>
+<ol style="list-style-type: decimal">
+<li>level number</li>
+<li>number of boxes to be initially present in the level</li>
+<li>number of polygons to be initially present in the level</li>
+<li>number of stars to be initially present in the level</li>
+</ol>
+<p>The second line of a .lvl file begins with WORLD and the numbers following WORLD are the width and height of the world.</p>
+<p>The subsequent lines of a .lvl file begin with an identifying word in all capitals, such as BOX, and then the shape's properties. There are five types of shapes possible:</p>
+<ol style="list-style-type: decimal">
+<li>Boxes</li>
+<li>Polygons</li>
+<li>Stars</li>
+<li>A Ball</li>
+<li>A Goal</li>
+</ol>
+<p>The properties of each of these shapes are described below, and they are ordered in the same order they appear in a .lvl file. Each type of shape has its own data structure that is then filled with the following pieces of information:</p>
+<h4 id="boxes">Boxes</h4>
+<ul>
+<li>mass</li>
+<li>x-position</li>
+<li>y-position</li>
+<li>width</li>
+<li>height</li>
+<li>r (red)</li>
+<li>g (blue)</li>
+<li>b (green)</li>
+</ul>
+<h4 id="polygons">Polygons</h4>
+<ul>
+<li>mass</li>
+<li>x-position of the center of the polygon</li>
+<li>y-position of the center of the polygon</li>
+<li>number of vertices</li>
+<li>x and y positions of vertices, relative to the center of the polygon</li>
+<li>r (red)</li>
+<li>g (blue)</li>
+<li>b (green)</li>
+</ul>
+<h4 id="stars">Stars</h4>
+<ul>
+<li>mass</li>
+<li>x-position</li>
+<li>y-position</li>
+<li>radius</li>
+<li>r (red)</li>
+<li>g (blue)</li>
+<li>b (green)</li>
+</ul>
+<h4 id="the-ball">The Ball</h4>
+<ul>
+<li>mass</li>
+<li>x-position</li>
+<li>y-position</li>
+<li>radius</li>
+<li>r (red)</li>
+<li>g (blue)</li>
+<li>b (green)</li>
+</ul>
+<h4 id="the-goal">The Goal</h4>
+<ul>
+<li>x_1-position of the line segment that denotes the bottom of the goal basket</li>
+<li>y_1-position of the line segment that denotes the bottom of the goal basket</li>
+<li>x_2-position of the line segment that denotes the bottom of the goal basket</li>
+<li>y_2-position of the line segment that denotes the bottom of the goal basket</li>
+</ul>
+</body>
+</html>

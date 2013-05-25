@@ -1,0 +1,21 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="graphics">Graphics</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>The graphics subsystem takes the hash table of client strokes from <a href="./ClientWorld.html">client world</a> and graphically represents them using the <a href="http://www.cairographics.org/">cairo</a> drawing sysystem.</p>
+<h2 id="drawing-shapes">Drawing Shapes</h2>
+<p>Because shapes are represented in a hash table in client world, they must be specially iterated over in GList form using a GFunc type method. Within the method to draw a specific stroke, strokes are drawn point by point as they are represented within the stroke structure. (Circles have their own method to be drawn, aren't they special.) Cairo rotation and transformation function guarentee that the shape has the correct location and rotaion because all shapes are zero centered. Finally, fill is determined by the shape type because all completed shapes are filled in, but sketches are only filled if they are almost complete.</p>
+<h2 id="ink-pot">Ink Pot</h2>
+<p>This is a graphical representation of how much ink is left for the user's current or next stroke. It is always drawn in the bottom left corner of the screen and it's color matches that of the user's strokes.</p>
+</body>
+</html>

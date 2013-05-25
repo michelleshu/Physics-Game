@@ -1,0 +1,47 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="server">Server</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>The server is the connection between the central physics world and each individual client who is drawing. The server recieves information updates from the <a href="./Client.c">client</a> informing the server of user updates and interactions with the program. Additionally, the server recieves information from the physics world to add delete and update the locations of strokes within the physics world so that they can be accurately drawn on the client's screen. The server also has the ability to send information to all clients or just a specified client depending on input.</p>
+<h2 id="data-structures">Data Structures</h2>
+<h3 id="private-singleton-server">Private Singleton Server</h3>
+<p>To avoid passing the server as a parameter in all functions, there is a private server structure which can be accesssed using a singleton. This structrue maintains a reference to the listening port, a hash table keeping track of active connections to clients, the set of file descriptors which are ready to be read from, and two references to the Asynchronous Queues which streamline the connection between the server itself and the separately threaded Chimpunk world.</p>
+<h3 id="asynchronous-queues">Asynchronous Queues</h3>
+<p>There are two asynchronous queues the send_queue and the recv_queue. These facilitate a safe connection between the two server side threads. Unlike many structures provided by <a href="https://developer.gnome.org/glib/stable/glib-Asynchronous-Queues.html">Glib</a>, they are thread safe, making them ideal for the one way transport of information. Information is pushed onto the send_queue by the Chipmunk thread. It waits there for the server to send it to the client. Whenever the server receives a packet from a client, it pushes the received packet (in a wrapper, see below) onto the recv_queue. They sit there until the sph_process_queue function is called and they are distributed to their proper locations. Most of them go to the <a href="./World.html">World</a></p>
+<h3 id="connections">Connections</h3>
+<p>This public structrue is utilized by both the server and the <a href="./ServerPacketHandler.html">ServerPacketHandler</a> to access the a particular client and associate information. Specifically for the server a connection keeps track of the file descriptor and associated socket informaiton. For the ServerPacketHandler, a connection keeps track of client specific information such as username in the chat function as well as current stroke being drawn so that a connection adds information to the correct stroke.</p>
+<h3 id="wrapper">Wrapper</h3>
+<p>This structure has references to a single connection and an address of a packet of informaiton. It is used so that data as well as the location it cam from can be passed together through the asynchronous arrays.</p>
+<h2 id="flow-of-information">Flow of Information</h2>
+<p>The server is a critical juncture in the flow of information between the <a href="./ServerMain.html">physics thread</a> on the server side and all <a href="./Client.html">clients</a> over the network. Coming in, informaiton from a client connection is immediately constructed into a <a href="./Packet.html">Packet</a>. It is then pushed onto the recv_queue in a wrapper containing the connection the informaiton originally came from.</p>
+<p>In the other direction, a wrapper is popped off of the send_queue with the packet of informaiton to be sent as well as the the connection to send it to (if any) if a connection is specified, the server will only send the packet to a specified client. If the connection pointer is NULL, the informaiton is sent to all active clients.</p>
+<h2 id="public-functions">Public Functions</h2>
+<p>There are two categories of public functions, the ones that access the queues and the functions that maintain the server thread and structure.</p>
+<p>The functions that maintain the queues push an pop wrappers in their specified manners. Popped wrappers come from the send_queue because those are leaving the server. Pushed wrappers are put onto the recv_queue to be sent out to specified server subsystems. Here are the functions:</p>
+<ul>
+<li>void server_send_packet( Packet* )</li>
+<li>void server_send/<em>packet/</em>to( Packet<em>, Connection</em> )</li>
+<li>int server_num_packets_available()</li>
+<li>Wrapper* server_recieve_packet()</li>
+</ul>
+<p>The second set of public functions are for sever maintenence. These functions create the server thread, and server connections as well as destroy and disconnect the server. They are listed here:</p>
+<ul>
+<li>void server_start()</li>
+<li>int server_is_connected()</li>
+<li>void server_disconnect()</li>
+<li>void server_destroy()</li>
+</ul>
+<h2 id="server-design">Server Design</h2>
+<p>The server subsystem is largely self sufficient because it is designed to run entirely within its own thread. The private functions initialize structures, and handle the thread. server_begin_thread() is the private method which is the main body of the thread. In its while loop, the thread checks server_listen(), which factors the select function, server_process_new_connections(), which checks if the listening file descriptor has a new connection and initializes it if it does, server_recieve_packets(), which recieves packets from clients and pushes them onto the receive queue, and finally server_send_packets(), which sends packets on the send_queue out to the active connections.</p>
+</body>
+</html>

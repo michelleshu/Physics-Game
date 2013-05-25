@@ -1,0 +1,36 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <link rel="stylesheet" href="./chubby_bunny.css" type="text/css" />
+</head>
+<body>
+<h1 id="servermain">ServerMain</h1>
+<h4 id="back-to-overview">Back To <a href="./Overview.html">Overview</a></h4>
+<h2 id="overview">Overview</h2>
+<p>ServerMain initializes the <a href="./Server.html">server</a> and <a href="./World.html">world</a>. After these initializations, the main run loop starts. The run loop does several things.</p>
+<ol style="list-style-type: decimal">
+<li>Step the physics world</li>
+<li>Send updates to the clients</li>
+<li>Process incoming packets</li>
+</ol>
+<h2 id="time-management">Time Management</h2>
+<p>In order to maintain a somewhat accurate sense of time, the cpSpace must be stepped exactly 60 times every second. Using sleep is one option, however it is not very accurate. Instead of sleep, I chose to use the gettimeofday function supplied in time.h. The process for keeping an accurate time step are as follows.</p>
+<h3 id="initialization">Initialization</h3>
+<ol style="list-style-type: decimal">
+<li>Store the current time to both current_time and physics_time.</li>
+</ol>
+<h3 id="run-loop">Run Loop</h3>
+<ol style="list-style-type: decimal">
+<li>Get the current time and store it to current_time.</li>
+<li>Compare the current_time with the physics_time. If the result is greater than 1/60 of a second, then do a physics step and add 1/60 of a second to physics_time. This step is repeated until current_time - physics_time &gt; 1/60 of a second. In this manner, if the physics falls behind, it will step enough times to catch up.</li>
+<li>If step 2 happened (if the physics world was updated), then send the updated information to the clients.</li>
+<li>Process the incoming packets on the queue.</li>
+<li>Check to see if an interrupt signal has been sent and exit gracefully if so.</li>
+</ol>
+</body>
+</html>
